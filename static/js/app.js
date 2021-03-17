@@ -31,11 +31,3 @@ app.component('status-bar', {
 });
 
 app.mount('#app')
-
-// var app = new Vue({
-//   el: "#app",
-//   template: `
-//     <status-bar>
-//     Hello!
-//   `
-// })
