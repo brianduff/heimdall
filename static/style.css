@@ -1,0 +1,33 @@
+body {
+  font-family: 'Anaheim', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #222233;
+  color: #efefef;
+  margin: 0;
+}
+
+.AppTitle {
+  font-size: 10vmin;
+}
+
+.AppLogo {
+  width: 100%;
+}
+
+.MainGrid {
+  display: grid;
+  grid-template-columns: 10vmin auto;
+  grid-template-rows: auto 100%;
+  column-gap: 20px;
+  align-items: center;
+  height: 100%;
+}
+
+.MainContent {
+  overflow: auto;
+  align-self: start;
+}
+
+.StatusBar {
+  background-color: #444455;
+  padding: 4px;
+}

@@ -5,6 +5,9 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+mkdir -p /etc/heimdall
+cp -r static /etc/heimdall
+
 mkdir -p /var/log/hiemdall
 launchctl stop org.dubh.heimdall
 cp -f org.dubh.heimdall.plist /Library/LaunchDaemons/
