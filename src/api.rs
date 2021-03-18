@@ -6,11 +6,20 @@ use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
 
 use crate::config;
+use crate::os;
+
+use os::User;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Status {
     is_configured: bool,
     hostname: String,
+}
+
+#[get("/users")]
+fn users() -> Result<Json<Vec<User>>> {
+    let v = vec![User{username: "foo".to_owned(), realname: "bar".to_owned(), id: 1, picture_base64: None, picture_mimetype: None}];
+    Ok(Json(v))
 }
 
 #[get("/status")]

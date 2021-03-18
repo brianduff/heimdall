@@ -7,6 +7,7 @@ use rocket_contrib::serve::StaticFiles;
 
 mod api;
 mod config;
+mod os;
 
 fn main() {
 
