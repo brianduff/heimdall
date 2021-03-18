@@ -35,3 +35,84 @@ body {
 h1 {
 
 }
+
+.UserSelector {
+  list-style-type: none; /* Remove bullets */
+  padding: 0; /* Remove padding */
+  margin: 0; /* Remove margins */
+
+  padding-left: 25px;
+  padding-right: 25px;
+  font-size: 18pt;
+}
+
+
+button {
+  transition: background-color 0.15s;
+  background: none;
+	color: inherit;
+	border: 1px solid #a0a0a0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+  text-align: center;
+  padding-left: 15px;
+  padding-right: 15px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+button:hover:enabled {
+  background-color: #a0a0d0;
+}
+
+button:hover:disabled {
+  cursor: not-allowed;
+}
+
+button:disabled {
+  color: #c0c0c0;
+}
+
+.UserTile:hover {
+  background-color: #a0a0d0;
+}
+
+.UserTile {
+  transition: background-color 0.15s;
+  background: none;
+	color: inherit;
+	border: none;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
+	outline: inherit;
+  width: 100%;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 30px auto;
+  align-items: center;
+  column-gap: 5px;
+  padding:10px;
+}
+
+.PasswordForm {
+  display: grid;
+  grid-template-columns: max-content auto;
+  column-gap: 10px;
+  row-gap: 10px;
+  padding-left: 25px;
+  padding-right: 25px;
+}
+
+input[type=password] {
+  border: 1px solid #a0a0d0;
+  color: inherit;
+  background: none;
+  padding: 5px;
+}
+
+
+.Validation {
+  color: #ffcccc;
+}
