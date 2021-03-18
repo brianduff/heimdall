@@ -87,7 +87,7 @@ fn get_image_mimetype(path: &Path) -> Option<String> {
 fn get_image_base64(path: &Path) -> Result<Option<String>> {
     match path.exists() {
         false => Ok(None),
-        true => Ok(Some(base64::encode_config(fs::read(path)?, base64::URL_SAFE)))
+        true => Ok(Some(base64::encode(fs::read(path)?)))
     }
 }
 
@@ -97,14 +97,20 @@ fn get_user(username: &str) -> Result<User> {
         .output()?;
 
     let user: DsclPlistUser = plist::from_bytes(&output.stdout)?;
-    let picture = get_only(user.picture)?;
-    let picture_path = Path::new(&picture);
+    let picture = user.picture.get(0);
+    let (picture_base64, picture_mimetype) = match picture {
+        Some(picture) => {
+            let picture_path = Path::new(picture);
+            (get_image_base64(picture_path)?, get_image_mimetype(picture_path))
+        },
+        None => (None, None)
+    };
 
     Ok(User {
         realname: get_only(user.realname)?,
         id: get_only(user.id)?.parse::<u64>()?,
-        picture_base64: get_image_base64(&picture_path)?,
-        picture_mimetype: get_image_mimetype(&picture_path),
+        picture_base64,
+        picture_mimetype,
         username: username.to_owned(),
     })
 }
