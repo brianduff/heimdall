@@ -78,6 +78,9 @@ app.component('setup-configure-passwords', {
     },
     setNextButtonEnabled(enabled) {
       document.getElementById("nextButton").disabled = !enabled
+    },
+    submitPasswords() {
+      bus.emit('setup-passwords-entered', { currentPassword, lockdownPassword })
     }
   },
   data() {
@@ -97,7 +100,7 @@ app.component('setup-configure-passwords', {
         <span>New lockdown password:</span><input id="lockdownPassword" type="password" v-model="lockdownPassword" @keyup="passwordChanged" />
         <span>Repeat new lockdown password:</span><input id="lockdownPasswordRepeat" type="password" v-model="lockdownPasswordRepeat" @keyup="passwordChanged" />
         <span/><span class="Validation" id="validation" style="visibility:hidden">Form has no errors</span>
-        <span /><div><button id="nextButton">Next</button></div>
+        <span /><div><button id="nextButton" @click="submitPasswords">Next</button></div>
       </div>
       <p>For security, these passwords will be stored in the Mac OS Keychain.</p>
     </div>
@@ -108,22 +111,37 @@ app.component('setup-configure-passwords', {
   }
 })
 
+app.component('setup-configure-schedule', {
+  props: ["user"],
+  template: `
+    <div>
+      <p>Heimdall can lock down {{ user.realname }}'s access on a schedule. By default, the computer will be locked down except for unlocked periods that you specify here.</p>
+    </div>
+  `
+})
+
 app.component('first-time-setup', {
   template: `
     <h1>Welcome to Heimdall!</h1>
-    <setup-choose-user v-if="stage === 'GET_USER_NAME'"></setup-choose-user>
+    <setup-choose-user v-if="stage === 'GET_USER_NAME'" />
     <setup-configure-passwords v-if="stage === 'PASSWORD_CONFIG'" :user="this.user" />
+    <setup-configure-schedule v-if="stage === 'SCHEDULE_CONFIG'" :user="this.user" />
   `,
   data() {
     return {
       stage: "GET_USER_NAME",
       user: null,
+      passwords: null
     }
   },
   mounted() {
     bus.on("setup-choose-user", user => {
       this.user = user
       this.stage = "PASSWORD_CONFIG"
+    })
+    bus.on("setup-passwords-entered", passwords => {
+      this.passwords = passwords
+      this.stage = "SCHEDULE_CONFIG"
     })
   }
 })
