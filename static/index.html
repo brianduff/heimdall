@@ -15,7 +15,11 @@
       <div></div>
       <div class="MainContent">
         <div id="app">
-          <status-bar v-bind:status="status"></status-bar>
+          <loading-bar v-if="loading"></loading-bar>
+          <status-bar :status="status"></status-bar>
+
+          <first-time-setup v-if="!loading && !status.is_configured">
+
         </div>
       </div>
     </div>

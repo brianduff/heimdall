@@ -1,22 +1,15 @@
-
-// Vue.component('status-bar', {
-//   template: `
-//   <div class="StatusBar">I am the status bar<span>
-//   `
-// })
-
 const Main = {
   data() {
     return {
       status: {
-        hostname: "unknown"
+        hostname: "unknown",
+        is_configured: false
       },
       loading: true
     }
   },
   mounted() {
     axios.get('/api/status').then(response => {
-      console.log("Got response", response)
       this.loading = false
       this.status = response.data
     })
@@ -25,9 +18,20 @@ const Main = {
 
 const app = Vue.createApp(Main)
 
+app.component('loading-bar', {
+  template: `<div>Loading...</div>`
+})
+
 app.component('status-bar', {
   props: ['status'],
-  template: `<div class="StatusBar">Host: {{status.hostname}}</div>`
-});
+  template: `<div class="StatusBar">Computer: {{status.hostname}}</div>`
+})
+
+app.component('first-time-setup', {
+  template: `
+    <h1>Welcome to Heimdall!</h1>
+    <p>You've never used Heimdall before on this computer. Let's get it set up!</p>
+  `
+})
 
 app.mount('#app')
