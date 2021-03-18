@@ -18,8 +18,7 @@ struct Status {
 
 #[get("/users")]
 fn users() -> Result<Json<Vec<User>>> {
-    let v = vec![User{username: "foo".to_owned(), realname: "bar".to_owned(), id: 1, picture_base64: None, picture_mimetype: None}];
-    Ok(Json(v))
+    Ok(Json(os::get_users()?))
 }
 
 #[get("/status")]
@@ -44,5 +43,5 @@ fn index() -> Result<String> {
 }
 
 pub fn get_routes() -> Vec<Route> {
-    routes![index, status]
+    routes![index, status, users]
 }

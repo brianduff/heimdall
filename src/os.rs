@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use std::{convert::TryInto, path::Path, process::Command};
+use std::{path::Path, process::Command};
 use std::str;
 use std::fs;
 
@@ -109,6 +109,10 @@ fn get_user(username: &str) -> Result<User> {
     })
 }
 
+pub fn get_users() -> Result<Vec<User>> {
+    Ok(get_usernames()?.iter().map(|username| get_user(username).unwrap()).collect())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -117,5 +121,6 @@ mod tests {
     fn test_get_usernames() {
         println!("{:?}", get_usernames());
         println!("{:?}", get_user("bduff"));
+        println!("{:?}", get_users());
     }
 }
