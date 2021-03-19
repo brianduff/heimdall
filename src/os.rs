@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use std::{path::Path, process::Command};
+use std::{ffi::OsStr, path::Path, process::Command};
 use std::str;
 use std::fs;
 use keyring::Keyring;
@@ -133,9 +133,67 @@ pub fn retrieve_password(username: &str, name: &str) -> Result<String> {
 pub fn change_password(username: &str, old_password: &str, new_password: &str) -> Result<()> {
     // TODO: use the stdin version of dscl.
     let user_path = format!("/Users/{}", username);
-    let _output = Command::new("dscl")
-        .args(&[".", "passwd", &user_path, old_password, new_password])
+    run_command("dscl", &[".", "passwd", &user_path, old_password, new_password])?;
+
+    Ok(())
+}
+
+/// Logs the given user out of this computer immediately.
+pub fn boot_user_out(username: &str) -> Result<()> {
+    // First get the uid of this user.
+    let output = Command::new("id")
+        .args(&["-u", username])
         .output()?;
+    let user_id = str::from_utf8(&output.stdout)?;
+
+    // Now issue the launchctl command that kicks out a user
+    let user_string = format!("user/{}", user_id);
+    run_command("launchctl", &["bootout", &user_string])?;
+
+    Ok(())
+}
+
+fn santize_for_quotes(s: &str) -> String {
+    s.chars().filter(|c| *c != '"').collect()
+}
+
+fn run_command<I, S>(program: &str, args: I) -> Result<String>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<OsStr>,
+{
+    let output = Command::new(program)
+        .args(args)
+        .output()?;
+    Ok(String::from_utf8(output.stdout)?)
+}
+
+
+/// Shows a user notification to the currently logged in user. Note that
+/// this only transiently appears on the screen.
+pub fn show_notification(title: &str, message: &str) -> Result<()> {
+    let message_s = santize_for_quotes(message);
+    let title_s = santize_for_quotes(title);
+    let script_command = format!("display notification \"{}\" sound name \"Submarine\" with title \"{}\"", message_s, title_s);
+
+    run_command("osascript", &["-e", &script_command])?;
+
+    Ok(())
+}
+
+/// Say something
+pub fn say(message: &str) -> Result<()> {
+    run_command("say", &[message])?;
+
+    Ok(())
+}
+
+pub fn show_alert(title: &str, message: &str) -> Result<()> {
+    let message_s = santize_for_quotes(message);
+    let title_s = santize_for_quotes(title);
+    let script_command = format!("display alert\"{}\" message \"{}\" as critical", title_s, message_s);
+
+    run_command("osascript", &["-e", &script_command])?;
 
     Ok(())
 }
@@ -149,5 +207,27 @@ mod tests {
         println!("{:?}", get_usernames());
         println!("{:?}", get_user("bduff"));
         println!("{:?}", get_users());
+    }
+
+    #[test]
+    fn test_notifications() -> Result<()> {
+        show_notification("Hello", "This is a long message!")?;
+        show_notification("Hello", "This is a shifty\"notification\"")?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_say() -> Result<()> {
+        say("Rust is cool! Do you want to try something new?")?;
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_alert() -> Result<()> {
+        show_alert("Your time is up!", "Please prepare to be logged out")?;
+
+        Ok(())
     }
 }
