@@ -1,12 +1,14 @@
-use anyhow::Result;
-use rocket::Route;
+use anyhow::{anyhow, Result};
+use rocket::{Route, response::status};
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
+use rocket::response::Debug;
 
 use crate::config;
 use crate::os;
 
 use os::User;
+use config::UserConfig;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Status {
@@ -40,6 +42,20 @@ fn index() -> Result<String> {
     .to_string())
 }
 
+#[post("/userconfig", data = "<config>")]
+fn create_user_config(config: Json<UserConfig>) -> std::result::Result<status::Accepted<String>, Debug<anyhow::Error>> {
+    let new_config = config.into_inner();
+    let mut loaded_config = config::load()?;
+
+    if loaded_config.user_config.contains_key(&new_config.username) {
+        Err(Debug(anyhow!("User {:?} already exists", &new_config.username)))
+    } else {
+        loaded_config.user_config.insert(new_config.username.clone(), new_config);
+        config::save(&loaded_config)?;
+        Ok(status::Accepted(None))
+    }
+}
+
 pub fn get_routes() -> Vec<Route> {
-    routes![index, status, users]
+    routes![index, status, users, create_user_config]
 }

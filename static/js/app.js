@@ -80,7 +80,7 @@ app.component('setup-configure-passwords', {
       document.getElementById("nextButton").disabled = !enabled
     },
     submitPasswords() {
-      bus.emit('setup-passwords-entered', { currentPassword, lockdownPassword })
+      bus.emit('setup-passwords-entered', { currentPassword: this.currentPassword, lockdownPassword: this.lockdownPassword })
     }
   },
   data() {
@@ -121,7 +121,7 @@ app.component('setup-configure-schedule', {
         <div v-for="(spec, index) in this.specs">
           <schedule-period :spec="spec" :index="index" :itemcount="this.specs.length" />
         </div>
-        <button>Next</button>
+        <button @click="submitSchedule">Next</button>
       </div>
     </div>
   `,
@@ -135,12 +135,15 @@ app.component('setup-configure-schedule', {
   mounted() {
     bus.on("add-schedule-item", () => {
       this.specs.push({day: 'Sunday', startTime: '540', endTime: '570', duration: 30, note: ""})
-      console.log(this.specs)
     })
     bus.on("remove-schedule-item", ({ index }) => {
-      console.log("Removing item ", this.specs[index])
       this.specs.splice(index, 1)
     })
+  },
+  methods: {
+    submitSchedule() {
+      bus.emit('schedule-complete', this.specs)
+    }
   }
 })
 
@@ -247,7 +250,6 @@ app.component('schedule-period', {
     }
   },
   mounted() {
-    console.log("Mounted schedule item with spec ", this.spec)
     this.generateSelectTimes("start", null)
     document.getElementById("start" + this.index).value = this.spec.startTime
     this.generateSelectTimes("end", this.spec.startTime)
@@ -261,12 +263,19 @@ app.component('first-time-setup', {
     <setup-choose-user v-if="stage === 'GET_USER_NAME'" />
     <setup-configure-passwords v-if="stage === 'PASSWORD_CONFIG'" :user="this.user" />
     <setup-configure-schedule v-if="stage === 'SCHEDULE_CONFIG'" :user="this.user" />
+    <div v-if="stage === 'READY_TO_ENABLE'">
+      <div>
+        Heimdall is ready to be configured for {{ this.user.realname }}. Click the button below to switch it on.
+      </div>
+      <button id="configureSubmit" @click="configureSubmit">Enable Hiemdall for {{ this.user.realname }}</button>
+    </div>
   `,
   data() {
     return {
       stage: "GET_USER_NAME",
       user: null,
-      passwords: null
+      passwords: null,
+      schedule: null,
     }
   },
   mounted() {
@@ -278,6 +287,49 @@ app.component('first-time-setup', {
       this.passwords = passwords
       this.stage = "SCHEDULE_CONFIG"
     })
+    bus.on("schedule-complete", specs => {
+      this.schedule = specs
+      this.stage = "READY_TO_ENABLE"
+    })
+  },
+  methods: {
+    configureSubmit() {
+      document.getElementById("configureSubmit").disabled = true
+
+      let request = {
+        username: this.user.username,
+        normal_password: this.passwords.currentPassword,
+        lockdown_password: this.passwords.lockdownPassword,
+        schedule: {
+          open_periods: []
+        }
+      }
+
+      let toHour = time => Math.floor(parseInt(time, 10) / 60)
+      let toMinute = time => parseInt(time, 10) % 60
+
+      this.schedule.forEach(item => {
+        let weekday = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ].indexOf(item.day)
+        let period = {
+          start: {
+            weekday,
+            hour: toHour(item.startTime),
+            minute: toMinute(item.startTime)
+          },
+          end: {
+            weekday,
+            hour: toHour(item.endTime),
+            minute: toMinute(item.endTime)
+          },
+          note: item.note
+        }
+        request.schedule.open_periods.push(period)
+      })
+
+      axios.post('/api/userconfig/', request).then((resp) => {
+        console.log("Ok")
+      })
+    }
   }
 })
 

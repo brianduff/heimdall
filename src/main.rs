@@ -3,14 +3,15 @@
 #[macro_use]
 extern crate rocket;
 
+use anyhow::Result;
+use rocket::config::Environment;
 use rocket_contrib::serve::StaticFiles;
 
 mod api;
 mod config;
 mod os;
 
-fn main() {
-
+fn main() -> Result<()> {
   // TODO use a flag.
   let static_path = if cfg!(debug_assertions) {
     "static"
@@ -22,4 +23,6 @@ fn main() {
     .mount("/api/", api::get_routes())
     .mount("/", StaticFiles::from(static_path))
     .launch();
+
+  Ok(())
 }

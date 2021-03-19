@@ -9,11 +9,14 @@ use std::{
     path::Path,
 };
 
+#[cfg(not(debug_assertions))]
 static CONFIG_FILE: &str = "/etc/heimdall/config.json";
+#[cfg(debug_assertions)]
+static CONFIG_FILE: &str = "/tmp/heimdall/config.json";
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    user_config: HashMap<String, UserConfig>,
+    pub user_config: HashMap<String, UserConfig>,
 }
 
 impl Config {
@@ -24,8 +27,10 @@ impl Config {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UserConfig {
-    open_password: String,
-    closed_password: String,
+    pub username: String,
+    pub normal_password: String,
+    pub lockdown_password: String,
+    pub schedule: Schedule,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -37,6 +42,7 @@ pub struct Schedule {
 pub struct OpenPeriod {
     start: Instant,
     end: Instant,
+    note: String
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -75,9 +81,7 @@ pub fn save(config: &Config) -> Result<()> {
         }
     }
 
-    let file = File::open(path)?;
-    let writer = BufWriter::new(file);
-    serde_json::to_writer(writer, config)?;
+    serde_json::to_writer_pretty(&File::create(path)?, &config)?;
 
     Ok(())
 }
