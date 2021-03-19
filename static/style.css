@@ -37,8 +37,6 @@ body {
   padding: 0; /* Remove padding */
   margin: 0; /* Remove margins */
 
-  padding-left: 25px;
-  padding-right: 25px;
   font-size: 18pt;
 }
 
@@ -92,23 +90,57 @@ button:disabled {
   padding:10px;
 }
 
+.Form {
+  padding-left: 25px;
+  padding-right: 25px;
+}
+
 .PasswordForm {
   display: grid;
   grid-template-columns: max-content auto;
   column-gap: 10px;
   row-gap: 10px;
-  padding-left: 25px;
-  padding-right: 25px;
 }
 
-input[type=password] {
+input {
+  font-family: inherit;
+  font-size: inherit;
   border: 1px solid #a0a0d0;
   color: inherit;
   background: none;
+  padding: 6px;
+}
+
+input::placeholder {
+  color: #9999b1;
+}
+
+select {
+  border: 1px solid #a0a0d0;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
   padding: 5px;
 }
 
 
 .Validation {
   color: #ffcccc;
+}
+
+.SchedulePeriod {
+  display: grid;
+  grid-template-columns: max-content max-content max-content max-content auto max-content max-content;
+  align-items: center;
+  column-gap: 5px;
+}
+
+.IconButton {
+  padding: 7;
+  border: none;
+}
+
+.Hidden {
+  visibility: hidden;
 }

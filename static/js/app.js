@@ -42,7 +42,7 @@ app.component('setup-choose-user', {
     <div>
       <p>You've never used Heimdall before on this computer. Let's get it set up!</p>
       <p>Please select a user to install Heimdall for:</p>
-      <ul class="UserSelector">
+      <ul class="UserSelector Form">
         <div v-for="user in users"><user-tile :user="user" /></div>
       </ul>
     </div>
@@ -95,7 +95,7 @@ app.component('setup-configure-passwords', {
       <p>Heimdall will prevent {{ user.realname }} from logging into their computer by changing their password whenever their computer is locked down.</p>
       <p>To do this, Heimdall needs to know the current password of {{ user.realname }} and a lockdown password you'd like to use for {{ user.realname }}.
       You should keep the lockdown password secret from {{ user.realname }}.</p>
-      <div class="PasswordForm">
+      <div class="PasswordForm Form">
         <span>Current Password:</span><input id="currentPassword" type="password" v-model="currentPassword" @keyup="passwordChanged" />
         <span>New lockdown password:</span><input id="lockdownPassword" type="password" v-model="lockdownPassword" @keyup="passwordChanged" />
         <span>Repeat new lockdown password:</span><input id="lockdownPasswordRepeat" type="password" v-model="lockdownPasswordRepeat" @keyup="passwordChanged" />
@@ -116,14 +116,36 @@ app.component('setup-configure-schedule', {
   template: `
     <div>
       <p>Heimdall can lock down {{ user.realname }}'s access on a schedule. By default, the computer will be locked down except for unlocked periods that you specify here.</p>
-      <schedule-period/>
+      <p>Add as many unlock periods as you like, and click Done when you're finished. You can also edit these later.</p>
+      <div class="Form">
+        <div v-for="(spec, index) in this.specs">
+          <schedule-period :spec="spec" :index="index" :itemcount="this.specs.length" />
+        </div>
+        <button>Next</button>
+      </div>
     </div>
-  `
+  `,
+  data() {
+    return {
+      specs: [
+        {day: 'Sunday', startTime: '540', endTime: '570', duration: 30}
+      ]
+    }
+  },
+  mounted() {
+    bus.on("add-schedule-item", () => {
+      this.specs.push({day: 'Sunday', startTime: '540', endTime: '570', duration: 30})
+    })
+    bus.on("remove-schedule-item", ({ index }) => {
+      this.specs.splice(index, 1)
+    })
+  }
 })
 
 app.component('schedule-period', {
+  props: ["spec", "index", "itemcount"],
   template: `
-    <div>
+    <div class="SchedulePeriod">
       <select id="day" name="day" v-model="day">
         <option value="Sunday">Sunday</option>
         <option value="Monday">Monday</option>
@@ -134,20 +156,34 @@ app.component('schedule-period', {
         <option value="Saturday">Saturday</option>
       </select>
       <select id="start" name="start" v-model="startTime" @change="changeStartTime">
-      </select> &mdash;
+      </select>
+      <span>&mdash;</span>
       <select id="end" name="end" v-model="endTime" @change="changeEndTime">
       </select>
+      <input placeholder="Note for this period" />
+      <button @click="removeScheduleItem(index)" v-bind:class="{ 'Hidden': itemcount == 1 }" class="IconButton"><i class="fas fa-minus-square"></i></button>
+      <button @click="addScheduleItem" v-bind:class="{ 'Hidden': index !== itemcount -1 }" class="IconButton"><i class="fas fa-plus-square"></i></button>
     </div>
   `,
   data() {
-    return {
-      "day": "Monday",
-      "startTime": '540',
-      "endTime": '570',
-      "duration": 30,
+    if (this.spec) {
+      return this.spec
+    } else {
+      return {
+        "day": "Monday",
+        "startTime": '540',
+        "endTime": '570',
+        "duration": 30,
+      }
     }
   },
   methods: {
+    addScheduleItem() {
+      bus.emit("add-schedule-item")
+    },
+    removeScheduleItem(index) {
+      bus.emit("remove-schedule-item", { index })
+    },
     changeStartTime() {
       // Regenerate the end times
       this.generateSelectTimes("end", this.startTime)
