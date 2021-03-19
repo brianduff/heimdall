@@ -134,6 +134,7 @@ select {
   grid-template-columns: max-content max-content max-content max-content auto max-content max-content;
   align-items: center;
   column-gap: 5px;
+  padding-bottom: 10px;
 }
 
 .IconButton {

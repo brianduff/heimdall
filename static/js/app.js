@@ -128,15 +128,17 @@ app.component('setup-configure-schedule', {
   data() {
     return {
       specs: [
-        {day: 'Sunday', startTime: '540', endTime: '570', duration: 30}
+        {day: 'Sunday', startTime: '540', endTime: '570', duration: 30, note: ""}
       ]
     }
   },
   mounted() {
     bus.on("add-schedule-item", () => {
-      this.specs.push({day: 'Sunday', startTime: '540', endTime: '570', duration: 30})
+      this.specs.push({day: 'Sunday', startTime: '540', endTime: '570', duration: 30, note: ""})
+      console.log(this.specs)
     })
     bus.on("remove-schedule-item", ({ index }) => {
+      console.log("Removing item ", this.specs[index])
       this.specs.splice(index, 1)
     })
   }
@@ -146,7 +148,7 @@ app.component('schedule-period', {
   props: ["spec", "index", "itemcount"],
   template: `
     <div class="SchedulePeriod">
-      <select id="day" name="day" v-model="day">
+      <select id="day" name="day" v-model="spec.day">
         <option value="Sunday">Sunday</option>
         <option value="Monday">Monday</option>
         <option value="Tuesday">Tuesday</option>
@@ -155,28 +157,16 @@ app.component('schedule-period', {
         <option value="Friday">Friday</option>
         <option value="Saturday">Saturday</option>
       </select>
-      <select id="start" name="start" v-model="startTime" @change="changeStartTime">
+      <select v-bind:id="'start' + index" name="start" v-model="spec.startTime" @change="changeStartTime">
       </select>
       <span>&mdash;</span>
-      <select id="end" name="end" v-model="endTime" @change="changeEndTime">
+      <select v-bind:id="'end' + index" name="end" v-model="spec.endTime" @change="changeEndTime">
       </select>
-      <input placeholder="Note for this period" />
+      <input placeholder="Note for this period" v-model="spec.note" />
       <button @click="removeScheduleItem(index)" v-bind:class="{ 'Hidden': itemcount == 1 }" class="IconButton"><i class="fas fa-minus-square"></i></button>
       <button @click="addScheduleItem" v-bind:class="{ 'Hidden': index !== itemcount -1 }" class="IconButton"><i class="fas fa-plus-square"></i></button>
     </div>
   `,
-  data() {
-    if (this.spec) {
-      return this.spec
-    } else {
-      return {
-        "day": "Monday",
-        "startTime": '540',
-        "endTime": '570',
-        "duration": 30,
-      }
-    }
-  },
   methods: {
     addScheduleItem() {
       bus.emit("add-schedule-item")
@@ -186,19 +176,19 @@ app.component('schedule-period', {
     },
     changeStartTime() {
       // Regenerate the end times
-      this.generateSelectTimes("end", this.startTime)
+      this.generateSelectTimes("end", this.spec.startTime)
       // Update the selected end time to maintain the duration
-      const newEndTime = parseInt(this.startTime, 10) + this.duration
-      this.endTime = newEndTime.toString()
+      const newEndTime = parseInt(this.spec.startTime, 10) + this.spec.duration
+      this.spec.endTime = newEndTime.toString()
     },
     changeEndTime() {
-      this.duration = parseInt(this.endTime) - parseInt(this.startTime)
+      this.duration = parseInt(this.spec.endTime) - parseInt(this.spec.startTime)
     },
     generateSelectTimes(id, startTime) {
       const hasStartTime = startTime
       startTime = startTime ? parseInt(startTime, 10) : 0;
 
-      const s = document.getElementById(id)
+      const s = document.getElementById(id + this.index)
 
       // Clear all existing things
       for (var i = s.options.length - 1; i >= 0; i--) {
@@ -257,10 +247,11 @@ app.component('schedule-period', {
     }
   },
   mounted() {
+    console.log("Mounted schedule item with spec ", this.spec)
     this.generateSelectTimes("start", null)
-    document.getElementById("start").value = this.startTime
-    this.generateSelectTimes("end", this.startTime)
-    document.getElementById("end").value = this.endTime
+    document.getElementById("start" + this.index).value = this.spec.startTime
+    this.generateSelectTimes("end", this.spec.startTime)
+    document.getElementById("end" + this.index).value = this.spec.endTime
   }
 })
 
