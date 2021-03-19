@@ -4,7 +4,6 @@
 extern crate rocket;
 
 use anyhow::Result;
-use rocket::config::Environment;
 use rocket_contrib::serve::StaticFiles;
 
 mod api;
