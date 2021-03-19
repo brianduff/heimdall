@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::{path::Path, process::Command};
 use std::str;
 use std::fs;
+use keyring::Keyring;
 
 // Mac os X specific things.
 #[derive(Serialize, Deserialize, Debug)]
@@ -114,6 +115,29 @@ fn get_user(username: &str) -> Result<User> {
 
 pub fn get_users() -> Result<Vec<User>> {
     Ok(get_usernames()?.iter().map(|username| get_user(username).unwrap()).collect())
+}
+
+pub fn store_password(username: &str, name: &str, password: &str) -> Result<()> {
+    let keyring = Keyring::new(name, username);
+    keyring.set_password(password)?;
+
+    Ok(())
+}
+
+pub fn retrieve_password(username: &str, name: &str) -> Result<String> {
+    let keyring = Keyring::new(name, username);
+
+    Ok(keyring.get_password()?)
+}
+
+pub fn change_password(username: &str, old_password: &str, new_password: &str) -> Result<()> {
+    // TODO: use the stdin version of dscl.
+    let user_path = format!("/Users/{}", username);
+    let _output = Command::new("dscl")
+        .args(&[".", "passwd", &user_path, old_password, new_password])
+        .output()?;
+
+    Ok(())
 }
 
 #[cfg(test)]

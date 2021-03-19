@@ -44,15 +44,38 @@ fn index() -> Result<String> {
 
 #[post("/userconfig", data = "<config>")]
 fn create_user_config(config: Json<UserConfig>) -> std::result::Result<status::Accepted<String>, Debug<anyhow::Error>> {
-    let new_config = config.into_inner();
+    let mut new_config = config.into_inner();
     let mut loaded_config = config::load()?;
 
     if loaded_config.user_config.contains_key(&new_config.username) {
         Err(Debug(anyhow!("User {:?} already exists", &new_config.username)))
     } else {
-        loaded_config.user_config.insert(new_config.username.clone(), new_config);
-        config::save(&loaded_config)?;
-        Ok(status::Accepted(None))
+        match (new_config.normal_password, new_config.lockdown_password) {
+            (Some(normal_password), Some(lockdown_password)) => {
+                let username = new_config.username.clone();
+                println!("Attempting to change password for user {}...", username);
+                os::change_password(&username, &normal_password, &lockdown_password)?;
+
+                println!("Changing password back for user {}...", username);
+                os::change_password(&username, &lockdown_password, &normal_password)?;
+
+                println!("Storing passwords in keychain");
+                os::store_password(&username, "dubh_heimdall_normal", &normal_password)?;
+                os::store_password(&username, "dubh_heimdall_lockdown", &lockdown_password)?;
+
+                // Wipe passwords so they're not persisted in the config file
+                new_config.normal_password = None;
+                new_config.lockdown_password = None;
+
+                loaded_config.user_config.insert(username, new_config);
+                config::save(&loaded_config)?;
+                Ok(status::Accepted(None))
+
+            },
+            _ => {
+                Err(Debug(anyhow!("No passwords provided")))
+            }
+        }
     }
 }
 

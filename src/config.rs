@@ -28,8 +28,8 @@ impl Config {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UserConfig {
     pub username: String,
-    pub normal_password: String,
-    pub lockdown_password: String,
+    pub normal_password: Option<String>,
+    pub lockdown_password: Option<String>,
     pub schedule: Schedule,
 }
 
