@@ -24,7 +24,7 @@ struct DsclPlistUser {
     id: Vec<String>,
 
     #[serde(rename = "dsAttrTypeStandard:Picture")]
-    picture: Vec<String>,
+    picture: Option<Vec<String>>,
 }
 
 /// Is this a normal username, and not a special built in account (starting with _)
@@ -95,20 +95,20 @@ fn get_user(username: &str) -> Result<User> {
         .output()?;
 
     let user: DsclPlistUser = plist::from_bytes(&output.stdout)?;
-    let picture = user.picture.get(0);
-    let (picture_base64, picture_mimetype) = match picture {
-        Some(picture) => {
-            let picture_path = Path::new(picture);
-            (get_image_base64(picture_path)?, get_image_mimetype(picture_path))
-        },
-        None => (None, None)
-    };
+    // let picture = user.picture.map_or_else(|p| p.get(0), None);
+    // let (picture_base64, picture_mimetype) = match picture {
+    //     Some(picture) => {
+    //         let picture_path = Path::new(picture);
+    //         (get_image_base64(picture_path)?, get_image_mimetype(picture_path))
+    //     },
+    //     None => (None, None)
+    // };
 
     Ok(User {
         realname: get_only(user.realname)?,
         id: get_only(user.id)?.parse::<u64>()?,
-        picture_base64,
-        picture_mimetype,
+        picture_base64: None,
+        picture_mimetype: None,
         username: username.to_owned(),
     })
 }
