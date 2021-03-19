@@ -1,5 +1,3 @@
-use std::ffi::OsString;
-
 use anyhow::Result;
 use rocket::Route;
 use rocket_contrib::json::Json;

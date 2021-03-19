@@ -32,10 +32,6 @@ body {
   padding: 4px;
 }
 
-h1 {
-
-}
-
 .UserSelector {
   list-style-type: none; /* Remove bullets */
   padding: 0; /* Remove padding */

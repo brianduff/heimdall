@@ -78,10 +78,7 @@ fn get_image_mimetype(path: &Path) -> Option<String> {
         }
     };
 
-    match result {
-        Some(string) => Some(string.to_owned()),
-        None => None
-    }
+    result.map(|x| x.to_owned())
 }
 
 fn get_image_base64(path: &Path) -> Result<Option<String>> {
