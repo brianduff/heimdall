@@ -116,8 +116,116 @@ app.component('setup-configure-schedule', {
   template: `
     <div>
       <p>Heimdall can lock down {{ user.realname }}'s access on a schedule. By default, the computer will be locked down except for unlocked periods that you specify here.</p>
+      <schedule-period/>
     </div>
   `
+})
+
+app.component('schedule-period', {
+  template: `
+    <div>
+      <select id="day" name="day" v-model="day">
+        <option value="Sunday">Sunday</option>
+        <option value="Monday">Monday</option>
+        <option value="Tuesday">Tuesday</option>
+        <option value="Wednesday">Wednesday</option>
+        <option value="Thursday">Thursday</option>
+        <option value="Friday">Friday</option>
+        <option value="Saturday">Saturday</option>
+      </select>
+      <select id="start" name="start" v-model="startTime" @change="changeStartTime">
+      </select> &mdash;
+      <select id="end" name="end" v-model="endTime" @change="changeEndTime">
+      </select>
+    </div>
+  `,
+  data() {
+    return {
+      "day": "Monday",
+      "startTime": '540',
+      "endTime": '570',
+      "duration": 30,
+    }
+  },
+  methods: {
+    changeStartTime() {
+      // Regenerate the end times
+      this.generateSelectTimes("end", this.startTime)
+      // Update the selected end time to maintain the duration
+      const newEndTime = parseInt(this.startTime, 10) + this.duration
+      this.endTime = newEndTime.toString()
+    },
+    changeEndTime() {
+      this.duration = parseInt(this.endTime) - parseInt(this.startTime)
+    },
+    generateSelectTimes(id, startTime) {
+      const hasStartTime = startTime
+      startTime = startTime ? parseInt(startTime, 10) : 0;
+
+      const s = document.getElementById(id)
+
+      // Clear all existing things
+      for (var i = s.options.length - 1; i >= 0; i--) {
+        s.remove(i)
+      }
+
+      for (var time = startTime + 15; time < 1440; time += 15) {
+        let ampm = "am"
+        let hour = Math.floor(time / 60)
+        if (hour == 0) {
+          hour = 12
+        } else if (hour >= 12) {
+          ampm = "pm"
+          if (hour >= 13) {
+            hour -= 12
+          }
+        }
+        let minute = time % 60
+        minute = (minute < 10) ? ("0" + minute) : minute
+
+        const durationHours = Math.floor((time - startTime) / 60)
+        const durationMinutes = (time - startTime) % 60
+
+        var durationString = ""
+        if (hasStartTime) {
+          if (durationHours == 0) {
+            durationString = ` (${durationMinutes} mins)`
+          } else if (durationMinutes == 0) {
+            if (durationHours == 1) {
+              durationString = " (1 hr)"
+            } else {
+              durationString = ` (${durationHours} hrs)`
+            }
+          } else {
+            let durationFraction = ""
+            switch (durationMinutes) {
+              case 15:
+                durationFraction = "25"
+                break;
+              case 30:
+                durationFraction = "5"
+                break;
+              case 45:
+                durationFraction = "75"
+                break;
+            }
+            durationString = ` (${durationHours}.${durationFraction} hrs)`
+          }
+        }
+
+        const option = document.createElement("option")
+        option.value = `${time}`
+        option.text = `${hour}:${minute}${ampm}${durationString}`
+        s.appendChild(option)
+      }
+    }
+  },
+  mounted() {
+    this.generateSelectTimes("start", null)
+    document.getElementById("start").value = this.startTime
+    this.generateSelectTimes("end", this.startTime)
+    document.getElementById("end").value = this.endTime
+  }
 })
 
 app.component('first-time-setup', {
