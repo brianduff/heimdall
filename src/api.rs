@@ -16,6 +16,13 @@ struct Status {
     hostname: String,
 }
 
+#[post("/say", data = "<message>")]
+fn say(message: String) -> Result<()> {
+    os::say(&message)?;
+
+    Ok(())
+}
+
 #[get("/users")]
 fn users() -> Result<Json<Vec<User>>> {
     Ok(Json(os::get_users()?))
@@ -80,5 +87,5 @@ fn create_user_config(config: Json<UserConfig>) -> std::result::Result<status::A
 }
 
 pub fn get_routes() -> Vec<Route> {
-    routes![index, status, users, create_user_config]
+    routes![index, status, users, create_user_config, say]
 }

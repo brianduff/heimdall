@@ -35,21 +35,21 @@ pub struct UserConfig {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Schedule {
-    open_periods: Vec<OpenPeriod>,
+    pub open_periods: Vec<OpenPeriod>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OpenPeriod {
-    start: Instant,
-    end: Instant,
-    note: String
+    pub start: Instant,
+    pub end: Instant,
+    pub note: String
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Instant {
-    weekday: u8,
-    hour: u8,
-    minute: u8,
+    pub weekday: u8,
+    pub hour: u8,
+    pub minute: u8,
 }
 
 pub fn get_config_path() -> PathBuf {
