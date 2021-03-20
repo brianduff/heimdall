@@ -1,7 +1,7 @@
 use anyhow::bail;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::fs;
+use std::{fs, path::PathBuf};
 use std::{
     collections::HashMap,
     fs::File,
@@ -52,24 +52,30 @@ pub struct Instant {
     minute: u8,
 }
 
+pub fn get_config_path() -> PathBuf {
+    PathBuf::from(CONFIG_FILE)
+}
+
 pub fn load() -> Result<Config> {
-    let path = Path::new(CONFIG_FILE);
+    let path = get_config_path();
     match path.exists() {
         true => {
+            println!("Loading config from {}", CONFIG_FILE);
             let file = File::open(CONFIG_FILE)?;
             let reader = BufReader::new(file);
             let config: Config = serde_json::from_reader(reader)?;
 
             Ok(config)
         }
-        false => Ok(Config {
-            user_config: HashMap::new(),
-        }),
+        false => {
+            println!("Creating new config");
+            Ok(Config { user_config: HashMap::new()})
+        },
     }
 }
 
 pub fn save(config: &Config) -> Result<()> {
-    let path = Path::new(CONFIG_FILE);
+    let path = get_config_path();
     match path.parent() {
         Some(parent) => {
             if !parent.is_dir() {

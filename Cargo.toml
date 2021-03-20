@@ -17,4 +17,4 @@ hostname = "^0.3"
 plist = "1"
 base64 = "0.13.0"
 keyring = "0.10.1"
-
+clokwerk = "0.3.4"

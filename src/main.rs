@@ -1,4 +1,4 @@
-#![feature(proc_macro_hygiene, decl_macro)]
+#![feature(proc_macro_hygiene, decl_macro, let_chains, backtrace)]
 
 #[macro_use]
 extern crate rocket;
@@ -9,6 +9,9 @@ use rocket_contrib::serve::StaticFiles;
 mod api;
 mod config;
 mod os;
+mod runloop;
+
+
 
 fn main() -> Result<()> {
   // TODO use a flag.
@@ -17,6 +20,8 @@ fn main() -> Result<()> {
   } else {
     "/etc/heimdall/static"
   };
+
+  let _scheduler = runloop::start();
 
   rocket::ignite()
     .mount("/api/", api::get_routes())
