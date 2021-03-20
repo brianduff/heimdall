@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::config::OpenPeriod;
-use crate::config::{self, Instant};
+use crate::config::{self, Instant, Schedule};
 use anyhow::Result;
 use chrono::{DateTime, Datelike, Local, Timelike};
 use clokwerk::{ScheduleHandle, Scheduler, TimeUnits};
@@ -50,6 +50,27 @@ fn run(mut run_state: MutexGuard<RunState>) {
   }
 }
 
+// fn is_user_locked(run_state: &mut MutexGuard<RunState>, user: &str) -> bool {
+//   run_state.user_state.insert(user.to_owned(), UserInMemoryState { is_locked: None});
+//   true
+// }
+
+fn run_with_result(run_state: &mut MutexGuard<RunState>) -> Result<()> {
+  check_config_loaded(run_state)?;
+
+  if let Some(config) = &run_state.config {
+    for (user, user_config) in &config.user_config {
+      // Check if the user should be locked out right now.
+      if let Some(period) = find_max_open_period(Local::now(), &user_config.schedule) {
+
+//        is_user_locked(run_state, user);
+      }
+    }
+  }
+
+  Ok(())
+}
+
 fn get_start_of_week(now: &DateTime<Local>) -> Option<DateTime<Local>> {
   let weekday = now.weekday().num_days_from_sunday();
   let sunday = *now - chrono::Duration::days(weekday.into());
@@ -84,31 +105,28 @@ fn get_local_period(
   None
 }
 
-/// Given a schedule, returns true if we're in a locked down period, false otherwise.
-fn is_lockdown_time(now: DateTime<Local>, schedule: &config::Schedule) -> bool {
+/// Given a schedule, returns the longest open period containing now.
+fn find_max_open_period(now: DateTime<Local>, schedule: &config::Schedule) -> Option<&OpenPeriod> {
+
+  let mut max_period_duration = chrono::Duration::zero();
+  let mut max_period = None;
+
   for period in &schedule.open_periods {
     if let Some((start, end)) = get_local_period(&now, &period) {
+      // println!("Checking if {:?} ({:?}) is between {:?} ({:?}) and {:?} ({:?})...", now, now.weekday(), start, start.weekday(), end, end.weekday());
       if now >= start && now < end {
-        return false;
+        let period_duration = end - start;
+        if period_duration > max_period_duration {
+          max_period_duration = period_duration;
+          max_period = Some(period)
+        }
       }
     }
   }
 
-  true
+  max_period
 }
 
-fn run_with_result(run_state: &mut MutexGuard<RunState>) -> Result<()> {
-  check_config_loaded(run_state)?;
-
-  if let Some(config) = &run_state.config {
-    for (user, user_config) in &config.user_config {
-      // Check if the user should be locked out right now.
-      if is_lockdown_time(Local::now(), &user_config.schedule) {}
-    }
-  }
-
-  Ok(())
-}
 
 fn get_config_file_metadata() -> Result<Option<(SystemTime, u64)>> {
   let path = config::get_config_path();
@@ -137,6 +155,7 @@ fn is_file_modified(
 
   Ok(modified)
 }
+
 
 fn check_config_loaded(run_state: &mut MutexGuard<RunState>) -> Result<()> {
   let load = match run_state.config {
@@ -176,9 +195,43 @@ pub fn start() -> ScheduleHandle {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
+  use chrono::TimeZone;
+    use config::{OpenPeriod, Schedule};
+
+    use super::*;
   #[test]
   fn test_start_of_week() {
     println!("{:?}", get_start_of_week(&Local::now()));
+  }
+
+  fn create_schedule(start: (u8, u8, u8), end: (u8, u8, u8)) -> Schedule {
+    Schedule {
+      open_periods: vec![
+        OpenPeriod {
+          start: Instant {
+            weekday: start.0,
+            hour: start.1,
+            minute: start.2
+          },
+          end: Instant {
+            weekday: end.0,
+            hour: end.1,
+            minute: end.2
+          },
+          note: "".to_owned()
+        }
+      ]
+    }
+  }
+
+  #[test]
+  fn test_find_open_period() {
+    let schedule = create_schedule((3, 14, 45), (3, 15, 0));
+
+    let now = Local.ymd(2020, 1, 1).and_hms(14, 30, 0);
+    assert_eq!(false, find_max_open_period(now, &schedule).is_some());
+
+    let now = Local.ymd(2020, 1, 1).and_hms(14, 45, 0);
+    assert_eq!(true, find_max_open_period(now, &schedule).is_some());
   }
 }
