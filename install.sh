@@ -8,7 +8,7 @@ fi
 mkdir -p /etc/heimdall
 cp -r static /etc/heimdall
 
-mkdir -p /var/log/hiemdall
+mkdir -p /var/log/heimdall
 launchctl stop org.dubh.heimdall
 cp -f org.dubh.heimdall.plist /Library/LaunchDaemons/
 launchctl unload /Library/LaunchDaemons/org.dubh.heimdall.plist
