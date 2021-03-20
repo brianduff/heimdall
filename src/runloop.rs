@@ -55,15 +55,44 @@ fn run(mut run_state: MutexGuard<RunState>) {
 //   true
 // }
 
-fn run_with_result(run_state: &mut MutexGuard<RunState>) -> Result<()> {
+fn unlock_user(user: &str) -> Result<()> {
+  println!("Faking unlocking user {}", user);
+  Ok(())
+}
+
+fn lock_user(user: &str) -> Result<()> {
+  println!("Faking locking user {}", user);
+  Ok(())
+}
+
+
+fn run_with_result(run_state: &mut RunState) -> Result<()> {
   check_config_loaded(run_state)?;
 
-  if let Some(config) = &run_state.config {
-    for (user, user_config) in &config.user_config {
+  if let Some(config) = &mut run_state.config {
+    for (user, user_config) in &mut config.user_config {
       // Check if the user should be locked out right now.
-      if let Some(period) = find_max_open_period(Local::now(), &user_config.schedule) {
+      let state = run_state
+        .user_state
+        .entry(user.to_owned())
+        .or_insert(UserInMemoryState { is_locked: None });
 
-//        is_user_locked(run_state, user);
+      if let Some(period) = find_max_open_period(Local::now(), &user_config.schedule) {
+        match state.is_locked {
+          None | Some(true) => {
+            unlock_user(user)?;
+            state.is_locked = Some(false)
+          },
+          _ => {}
+        }
+      } else {
+        match state.is_locked {
+          None | Some(false) => {
+            lock_user(user)?;
+            state.is_locked = Some(true)
+          },
+          _ => {}
+        }
       }
     }
   }
@@ -107,13 +136,11 @@ fn get_local_period(
 
 /// Given a schedule, returns the longest open period containing now.
 fn find_max_open_period(now: DateTime<Local>, schedule: &config::Schedule) -> Option<&OpenPeriod> {
-
   let mut max_period_duration = chrono::Duration::zero();
   let mut max_period = None;
 
   for period in &schedule.open_periods {
     if let Some((start, end)) = get_local_period(&now, &period) {
-      // println!("Checking if {:?} ({:?}) is between {:?} ({:?}) and {:?} ({:?})...", now, now.weekday(), start, start.weekday(), end, end.weekday());
       if now >= start && now < end {
         let period_duration = end - start;
         if period_duration > max_period_duration {
@@ -126,7 +153,6 @@ fn find_max_open_period(now: DateTime<Local>, schedule: &config::Schedule) -> Op
 
   max_period
 }
-
 
 fn get_config_file_metadata() -> Result<Option<(SystemTime, u64)>> {
   let path = config::get_config_path();
@@ -156,8 +182,7 @@ fn is_file_modified(
   Ok(modified)
 }
 
-
-fn check_config_loaded(run_state: &mut MutexGuard<RunState>) -> Result<()> {
+fn check_config_loaded(run_state: &mut RunState) -> Result<()> {
   let load = match run_state.config {
     None => true,
     Some(_) => is_file_modified(
@@ -196,9 +221,9 @@ pub fn start() -> ScheduleHandle {
 #[cfg(test)]
 mod tests {
   use chrono::TimeZone;
-    use config::{OpenPeriod, Schedule};
+  use config::{OpenPeriod, Schedule};
 
-    use super::*;
+  use super::*;
   #[test]
   fn test_start_of_week() {
     println!("{:?}", get_start_of_week(&Local::now()));
@@ -206,21 +231,19 @@ mod tests {
 
   fn create_schedule(start: (u8, u8, u8), end: (u8, u8, u8)) -> Schedule {
     Schedule {
-      open_periods: vec![
-        OpenPeriod {
-          start: Instant {
-            weekday: start.0,
-            hour: start.1,
-            minute: start.2
-          },
-          end: Instant {
-            weekday: end.0,
-            hour: end.1,
-            minute: end.2
-          },
-          note: "".to_owned()
-        }
-      ]
+      open_periods: vec![OpenPeriod {
+        start: Instant {
+          weekday: start.0,
+          hour: start.1,
+          minute: start.2,
+        },
+        end: Instant {
+          weekday: end.0,
+          hour: end.1,
+          minute: end.2,
+        },
+        note: "".to_owned(),
+      }],
     }
   }
 
