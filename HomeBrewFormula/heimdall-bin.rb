@@ -1,11 +1,11 @@
 class HeimdallBin < Formula
-  version '0.3'
+  version '0.4'
   desc "Guard the Bifrost."
   homepage "https://github.com/brianduff/heimdall"
 
   if OS.mac?
       url "https://github.com/brianduff/heimdall/releases/download/v#{version}/heimdall-#{version}.tar.gz"
-      sha256 "f484ee736ca210101977a34668c37afbf7d32961a52d38a338b6e260d51e2b05"
+      sha256 "6523da8f93bf67e645639c8c9c38c4e2e40d4dabdb3e6aa5d365a9990be14784"
   end
 
   def install
