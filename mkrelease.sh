@@ -12,8 +12,10 @@ else
   cargo build --release
   cp target/release/heimdall release/$version/
   strip release/$version/heimdall
-  cp install.sh release/$version/
-  cp -r static release/$version/
+
+  mkdir -p release/$version/etc/heimdall
+  cp install.sh release/$version/etc/heimdall
+  cp -r static release/$version/etc/heimdall
 fi
 
 tar -cvf release/heimdall-$version.tar.gz -C release/$version .
