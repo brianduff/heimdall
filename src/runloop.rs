@@ -55,16 +55,11 @@ fn run(mut run_state: MutexGuard<RunState>) {
 //   true
 // }
 
-fn unlock_user(user: &str) -> Result<()> {
-  println!("Faking unlocking user {}", user);
+fn set_locked(user: &str, locked: bool) -> Result<()> {
+  println!("User {} locked={}", user, locked);
   Ok(())
-}
 
-fn lock_user(user: &str) -> Result<()> {
-  println!("Faking locking user {}", user);
-  Ok(())
 }
-
 
 fn run_with_result(run_state: &mut RunState) -> Result<()> {
   check_config_loaded(run_state)?;
@@ -77,22 +72,13 @@ fn run_with_result(run_state: &mut RunState) -> Result<()> {
         .entry(user.to_owned())
         .or_insert(UserInMemoryState { is_locked: None });
 
-      if let Some(period) = find_max_open_period(Local::now(), &user_config.schedule) {
-        match state.is_locked {
-          None | Some(true) => {
-            unlock_user(user)?;
-            state.is_locked = Some(false)
-          },
-          _ => {}
-        }
-      } else {
-        match state.is_locked {
-          None | Some(false) => {
-            lock_user(user)?;
-            state.is_locked = Some(true)
-          },
-          _ => {}
-        }
+      let open_period = find_max_open_period(Local::now(), &user_config.schedule);
+      let should_lock = open_period.is_some();
+      let is_locked = state.is_locked.unwrap_or(!should_lock);
+
+      if should_lock != is_locked {
+        set_locked(user, should_lock)?;
+        state.is_locked = Some(should_lock);
       }
     }
   }
