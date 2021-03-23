@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use rocket::response::Debug;
 
 use crate::config;
+use crate::constants;
 use crate::os;
 
 use os::User;
@@ -67,8 +68,8 @@ fn create_user_config(config: Json<UserConfig>) -> std::result::Result<status::A
                 os::change_password(&username, Some(&lockdown_password), &normal_password)?;
 
                 println!("Storing passwords in keychain");
-                os::store_password(&username, "dubh_heimdall_normal", &normal_password)?;
-                os::store_password(&username, "dubh_heimdall_lockdown", &lockdown_password)?;
+                os::store_password(&username, constants::KEYSTORE_NORMAL_PASSWORD_KEY, &normal_password)?;
+                os::store_password(&username, constants::KEYSTORE_LOCKDOWN_PASSWORD_KEY, &lockdown_password)?;
 
                 // Wipe passwords so they're not persisted in the config file
                 new_config.normal_password = None;

@@ -8,6 +8,7 @@ use rocket_contrib::serve::StaticFiles;
 
 mod api;
 mod config;
+mod constants;
 mod os;
 mod runloop;
 mod scratch;

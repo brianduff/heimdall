@@ -2,6 +2,7 @@ use crate::config::Config;
 use crate::config::OpenPeriod;
 use crate::config::{self, Instant, Schedule};
 use crate::os;
+use crate::constants;
 use anyhow::Result;
 use chrono::{DateTime, Datelike, Local, Timelike};
 use clokwerk::{ScheduleHandle, Scheduler, TimeUnits};
@@ -52,7 +53,21 @@ fn run(mut run_state: MutexGuard<RunState>) {
 }
 
 fn set_locked(user: &str, locked: bool) -> Result<()> {
-  println!("User {} locked={}", user, locked);
+  let new_password_key = match locked {
+    true => constants::KEYSTORE_LOCKDOWN_PASSWORD_KEY,
+    false => constants::KEYSTORE_NORMAL_PASSWORD_KEY
+  };
+
+  // This doesn't log the password, it logs the key for keystore.
+  println!("Changing password for user {} to {}", user, new_password_key);
+  os::change_password(user, None, new_password_key)?;
+
+  // Only if that was successful, kick the user out if we're in lock mode.
+  if locked {
+    println!("Force logging out user {}", user);
+    os::boot_user_out(user)?;
+  }
+
   Ok(())
 }
 
