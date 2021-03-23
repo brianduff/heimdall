@@ -7,7 +7,7 @@
     <string>org.dubh.heimdall</string>
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/bduff/Documents/Development/heimdall/target/debug/heimdall</string>
+        <string>/usr/local/bin/heimdall</string>
     </array>
     <key>RunAtLoad</key>
     <false/>

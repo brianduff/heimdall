@@ -20,7 +20,7 @@ fn main() -> Result<()> {
   let static_path = if cfg!(debug_assertions) {
     "static"
   } else {
-    "/etc/heimdall/static"
+    "/usr/local/etc/heimdall/static"
   };
 
   let _scheduler = runloop::start();

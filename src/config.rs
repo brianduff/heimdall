@@ -10,7 +10,7 @@ use std::{
 };
 
 #[cfg(not(debug_assertions))]
-static CONFIG_FILE: &str = "/etc/heimdall/config.json";
+static CONFIG_FILE: &str = "/usr/local/etc/heimdall/config.json";
 #[cfg(debug_assertions)]
 static CONFIG_FILE: &str = "/tmp/heimdall/config.json";
 
