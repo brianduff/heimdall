@@ -11,6 +11,8 @@ use crate::os;
 use os::User;
 use config::UserConfig;
 
+use log::info;
+
 #[derive(Serialize, Deserialize, Debug)]
 struct Status {
     is_configured: bool,
@@ -61,13 +63,13 @@ fn create_user_config(config: Json<UserConfig>) -> std::result::Result<status::A
         match (new_config.normal_password, new_config.lockdown_password) {
             (Some(normal_password), Some(lockdown_password)) => {
                 let username = new_config.username.clone();
-                println!("Attempting to change password for user {}...", username);
+                info!("Attempting to change password for user {}...", username);
                 os::change_password(&username, Some(&normal_password), &lockdown_password)?;
 
-                println!("Changing password back for user {}...", username);
+                info!("Changing password back for user {}...", username);
                 os::change_password(&username, Some(&lockdown_password), &normal_password)?;
 
-                println!("Storing passwords in keychain");
+                info!("Storing passwords in keychain");
                 os::store_password(&username, constants::KEYSTORE_NORMAL_PASSWORD_KEY, &normal_password)?;
                 os::store_password(&username, constants::KEYSTORE_LOCKDOWN_PASSWORD_KEY, &lockdown_password)?;
 

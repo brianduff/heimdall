@@ -14,6 +14,7 @@ use std::{
   time::SystemTime,
 };
 use std::{path::Path, time::Duration};
+use log::{info, error};
 
 // Running state for polling. This lets us keep
 // track of things that are happening while the program
@@ -43,9 +44,9 @@ impl RunState {
 fn run(mut run_state: MutexGuard<RunState>) {
   match run_with_result(&mut run_state) {
     Err(e) => {
-      eprintln!("Error in run: {}", e);
+      error!("Error in run: {}", e);
       if e.backtrace().status() == BacktraceStatus::Captured {
-        eprintln!("{}", e.backtrace());
+        error!("{}", e.backtrace());
       }
     }
     Ok(()) => {}
@@ -59,12 +60,12 @@ fn set_locked(user: &str, locked: bool) -> Result<()> {
   };
 
   // This doesn't log the password, it logs the key for keystore.
-  println!("Changing password for user {} to {}", user, new_password_key);
+  info!("Changing password for user {} to {}", user, new_password_key);
   os::change_password(user, None, new_password_key)?;
 
   // Only if that was successful, kick the user out if we're in lock mode.
   if locked {
-    println!("Force logging out user {}", user);
+    info!("Force logging out user {}", user);
     os::boot_user_out(user)?;
   }
 
@@ -72,10 +73,12 @@ fn set_locked(user: &str, locked: bool) -> Result<()> {
 }
 
 fn run_with_result(run_state: &mut RunState) -> Result<()> {
+  info!("Run loop started");
   check_config_loaded(run_state)?;
 
   if let Some(config) = &mut run_state.config {
     for (user, user_config) in &mut config.user_config {
+      info!("Checking config for {}", user);
       // Check if the user should be locked out right now.
       let state = run_state
         .user_state
@@ -85,6 +88,8 @@ fn run_with_result(run_state: &mut RunState) -> Result<()> {
       let open_period = find_max_open_period(Local::now(), &user_config.schedule);
       let should_lock = open_period.is_some();
       let is_locked = state.is_locked.unwrap_or(!should_lock);
+
+      info!("should_lock={}, is_locked={}", should_lock, is_locked);
 
       if should_lock != is_locked {
         set_locked(user, should_lock)?;
@@ -202,7 +207,7 @@ fn check_config_loaded(run_state: &mut RunState) -> Result<()> {
 }
 
 pub fn start() -> ScheduleHandle {
-  println!("Starting run loop");
+  info!("Starting run loop");
   let run_state = Arc::new(Mutex::new(RunState::new()));
 
   let mut scheduler = Scheduler::new();

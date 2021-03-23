@@ -9,6 +9,8 @@ use std::{
     path::Path,
 };
 
+use log::info;
+
 #[cfg(not(debug_assertions))]
 static CONFIG_FILE: &str = "/usr/local/etc/heimdall/config.json";
 #[cfg(debug_assertions)]
@@ -60,7 +62,7 @@ pub fn load() -> Result<Config> {
     let path = get_config_path();
     match path.exists() {
         true => {
-            println!("Loading config from {}", CONFIG_FILE);
+            info!("Loading config from {}", CONFIG_FILE);
             let file = File::open(CONFIG_FILE)?;
             let reader = BufReader::new(file);
             let config: Config = serde_json::from_reader(reader)?;
@@ -68,7 +70,7 @@ pub fn load() -> Result<Config> {
             Ok(config)
         }
         false => {
-            println!("Creating new config");
+            info!("Creating new config");
             Ok(Config { user_config: HashMap::new()})
         },
     }

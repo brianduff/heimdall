@@ -4,6 +4,7 @@
 extern crate rocket;
 
 use anyhow::Result;
+use env_logger::Env;
 use rocket_contrib::serve::StaticFiles;
 
 mod api;
@@ -16,6 +17,8 @@ mod scratch;
 
 
 fn main() -> Result<()> {
+  env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
   // TODO use a flag.
   let static_path = if cfg!(debug_assertions) {
     "static"

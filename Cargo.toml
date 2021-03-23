@@ -19,3 +19,6 @@ base64 = "0.13.0"
 keyring = "0.10.1"
 clokwerk = "0.3.4"
 chrono = "0.4"
+log = "0.4.14"
+env_logger = "0.8.3"
+

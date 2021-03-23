@@ -4,6 +4,7 @@ use std::{ffi::OsStr, path::Path, process::Command};
 use std::str;
 use std::fs;
 use keyring::Keyring;
+use log::info;
 
 // Mac os X specific things.
 #[derive(Serialize, Deserialize, Debug)]
@@ -118,8 +119,10 @@ pub fn get_users() -> Result<Vec<User>> {
 }
 
 pub fn store_password(username: &str, name: &str, password: &str) -> Result<()> {
+    info!("Storing password in keychain {} for user {}", name, username);
     let keyring = Keyring::new(name, username);
     keyring.set_password(password)?;
+    info!("Stored password for {}", username);
 
     Ok(())
 }
