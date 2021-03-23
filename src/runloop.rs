@@ -1,6 +1,7 @@
 use crate::config::Config;
 use crate::config::OpenPeriod;
 use crate::config::{self, Instant, Schedule};
+use crate::os;
 use anyhow::Result;
 use chrono::{DateTime, Datelike, Local, Timelike};
 use clokwerk::{ScheduleHandle, Scheduler, TimeUnits};
@@ -50,15 +51,9 @@ fn run(mut run_state: MutexGuard<RunState>) {
   }
 }
 
-// fn is_user_locked(run_state: &mut MutexGuard<RunState>, user: &str) -> bool {
-//   run_state.user_state.insert(user.to_owned(), UserInMemoryState { is_locked: None});
-//   true
-// }
-
 fn set_locked(user: &str, locked: bool) -> Result<()> {
   println!("User {} locked={}", user, locked);
   Ok(())
-
 }
 
 fn run_with_result(run_state: &mut RunState) -> Result<()> {

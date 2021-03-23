@@ -130,10 +130,17 @@ pub fn retrieve_password(username: &str, name: &str) -> Result<String> {
     Ok(keyring.get_password()?)
 }
 
-pub fn change_password(username: &str, old_password: &str, new_password: &str) -> Result<()> {
+pub fn change_password(username: &str, old_password: Option<&str>, new_password: &str) -> Result<()> {
     // TODO: use the stdin version of dscl.
     let user_path = format!("/Users/{}", username);
-    run_command("dscl", &[".", "passwd", &user_path, old_password, new_password])?;
+
+    let mut options = vec![".", "passwd", &user_path];
+    if let Some(old_password) = old_password {
+        options.push(old_password);
+    }
+    options.push(new_password);
+
+    run_command("dscl", &options)?;
 
     Ok(())
 }

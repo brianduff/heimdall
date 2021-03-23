@@ -61,10 +61,10 @@ fn create_user_config(config: Json<UserConfig>) -> std::result::Result<status::A
             (Some(normal_password), Some(lockdown_password)) => {
                 let username = new_config.username.clone();
                 println!("Attempting to change password for user {}...", username);
-                os::change_password(&username, &normal_password, &lockdown_password)?;
+                os::change_password(&username, Some(&normal_password), &lockdown_password)?;
 
                 println!("Changing password back for user {}...", username);
-                os::change_password(&username, &lockdown_password, &normal_password)?;
+                os::change_password(&username, Some(&lockdown_password), &normal_password)?;
 
                 println!("Storing passwords in keychain");
                 os::store_password(&username, "dubh_heimdall_normal", &normal_password)?;
