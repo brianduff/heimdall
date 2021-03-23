@@ -15,6 +15,7 @@ else
 
   mkdir -p release/$version/etc/heimdall
   cp install.sh release/$version/etc/heimdall
+  cp org.dubh.heimdall.plist release/$version/etc/heimdall
   cp -r static release/$version/etc/heimdall
 fi
 

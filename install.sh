@@ -5,7 +5,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-mkdir -p /var/log/heimdall
+mkdir -p /usr/local/var/log/heimdall
 launchctl stop org.dubh.heimdall
 cp -f org.dubh.heimdall.plist /Library/LaunchDaemons/
 launchctl unload /Library/LaunchDaemons/org.dubh.heimdall.plist

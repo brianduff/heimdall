@@ -12,8 +12,8 @@
     <key>RunAtLoad</key>
     <false/>
     <key>StandardOutPath</key>
-    <string>/var/log/heimdall/stdout.log</string>
+    <string>/usr/local/var/log/heimdall/stdout.log</string>
     <key>StandardErrorPath</key>
-    <string>/var/log/heimdall/sdtderr.log</string>
+    <string>/usr/local/var/log/heimdall/sdtderr.log</string>
 </dict>
 </plist>
