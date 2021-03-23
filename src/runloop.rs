@@ -86,7 +86,7 @@ fn run_with_result(run_state: &mut RunState) -> Result<()> {
         .or_insert(UserInMemoryState { is_locked: None });
 
       let open_period = find_max_open_period(Local::now(), &user_config.schedule);
-      let should_lock = open_period.is_some();
+      let should_lock = open_period.is_none();
       let is_locked = state.is_locked.unwrap_or(!should_lock);
 
       info!("should_lock={}, is_locked={}", should_lock, is_locked);
@@ -214,7 +214,7 @@ pub fn start() -> ScheduleHandle {
 
   let rs = Arc::clone(&run_state);
   scheduler
-    .every(2.seconds())
+    .every(15.seconds())
     .run(move || run(rs.lock().unwrap()));
   scheduler.watch_thread(Duration::from_millis(1000))
 }
