@@ -1,10 +1,11 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use std::{ffi::OsStr, path::Path, process::Command};
+use std::{ffi::OsStr, fmt::Display, path::Path, process::Command};
 use std::str;
 use std::fs;
 use keyring::Keyring;
 use log::info;
+use itertools::{Itertools, cloned};
 
 // Mac os X specific things.
 #[derive(Serialize, Deserialize, Debug)]
@@ -170,11 +171,17 @@ fn santize_for_quotes(s: &str) -> String {
 fn run_command<I, S>(program: &str, args: I) -> Result<String>
     where
         I: IntoIterator<Item = S>,
-        S: AsRef<OsStr>,
+        S: AsRef<OsStr> + Display,
 {
+    // Temporary logging.
+    let vec: Vec<S> = args.into_iter().collect();
+    info!("Command: {} {}", program, vec.iter().join(" "));
+
     let output = Command::new(program)
-        .args(args)
+        .args(vec)
         .output()?;
+
+
     Ok(String::from_utf8(output.stdout)?)
 }
 
@@ -204,6 +211,24 @@ pub fn show_alert(title: &str, message: &str) -> Result<()> {
     let script_command = format!("display alert\"{}\" message \"{}\" as critical", title_s, message_s);
 
     run_command("osascript", &["-e", &script_command])?;
+
+    Ok(())
+}
+
+/// Shows a message on the login screen.
+pub fn show_loginscreen_message(message: &str, force: bool) -> Result<()> {
+    run_command("defaults", &[
+        "write",
+        "/Library/Preferences/com.apple.loginwindow",
+        "LoginwindowText",
+        message
+    ])?;
+
+    if force {
+        // It won't update unless we force kill the login window.
+        // Need to check if this is going to force a log out.
+        run_command("killall", &["-9", "loginwindow"])?;
+    }
 
     Ok(())
 }

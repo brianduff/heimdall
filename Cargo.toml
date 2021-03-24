@@ -21,4 +21,8 @@ clokwerk = "0.3.4"
 chrono = "0.4"
 log = "0.4.14"
 env_logger = "0.8.3"
+itertools = "0.10.0"
+sysbar = "0.2.0"
 
+#[dependencies.sysbar]
+#path = "../rust-sysbar"

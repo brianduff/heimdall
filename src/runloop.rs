@@ -61,12 +61,17 @@ fn set_locked(user: &str, locked: bool) -> Result<()> {
 
   // This doesn't log the password, it logs the key for keystore.
   info!("Changing password for user {} to {}", user, new_password_key);
-  os::change_password(user, None, new_password_key)?;
+  let new_password = os::retrieve_password(user, new_password_key)?;
+  os::change_password(user, None, &new_password)?;
 
   // Only if that was successful, kick the user out if we're in lock mode.
   if locked {
     info!("Force logging out user {}", user);
     os::boot_user_out(user)?;
+    os::show_loginscreen_message(&format!("{} is currently locked out", user), true)?;
+  } else {
+    // TODO: we need to make this handle multi user
+    os::show_loginscreen_message("", false)?;
   }
 
   Ok(())
