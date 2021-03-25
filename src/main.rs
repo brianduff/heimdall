@@ -19,7 +19,7 @@ use log::info;
 fn main() -> Result<()> {
   env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
 
-  let mut bar = sysbar::Sysbar::new("Hello");
+  // let mut bar = sysbar::Sysbar::new("Hello");
   // // bar.add_quit_item("Quit");
   // bar.display();
 
