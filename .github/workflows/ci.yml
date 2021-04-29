@@ -6,7 +6,6 @@ on:
 
 env:
   CARGO_INCREMENTAL: 0
-  RUSTFLAGS: -D warnings
 
 jobs:
   test:
